@@ -31,7 +31,7 @@ class Pixel(ABC):
     def asRGB(self):
         pass
 
-    def get_reproduction_amount(self):
+    def get_generation(self):
         return self.generation
 
     def increment_generation_count(self):
@@ -56,9 +56,9 @@ class Pixel(ABC):
                (first_values[2] + second_values[2]) // 2
 
     @staticmethod
-    def reproduce_couple(first, second):
-        first_type = type(first)
-        second_type = type(second)
+    def reproduce_couple(couple):
+        first_type = type(couple[0]).__name__
+        second_type = type(couple[1]).__name__
         global child_type
         if Pixel.dominance_dict[first_type]:
             if Pixel.dominance_dict[second_type]:
@@ -72,7 +72,7 @@ class Pixel(ABC):
             else:
                 rnd_choice = random.randint(0, 1)
                 child_type = first_type if rnd_choice == 0 else second_type
-        r, g, b = Pixel.rgb_average(first, second)
+        r, g, b = Pixel.rgb_average(couple[0], couple[1])
 
         if child_type == 'RGB':
             return RGB((r, g, b))
@@ -265,26 +265,26 @@ class Population:
 class Reproduction:
     def __init__(self, population, interval, iterations):
         self.population = population
-        self.generation = 0
+        self.stage = 0
         self.reproduction_interval = interval
         self.number_of_iterations = iterations
         print(self)
 
     def __repr__(self):
-        return 'Generation {0}:\n{1}\n'.format(self.get_cur_generation(), self.population)
+        return 'Stage {0}:\n{1}\n'.format(self.get_cur_stage(), self.population)
 
     def increment_stage(self):
-        self.generation += 1
+        self.stage += 1
 
-    def get_cur_generation(self):
-        return self.generation
+    def get_cur_stage(self):
+        return self.stage
 
     def reproduce_executor(self):
         couples = []
         couples_ids = []
         cur_population = self.population.get_community()
         for id, pixel in cur_population.items():
-            if id in couples_ids:
+            if id in couples_ids or pixel.get_generation():
                 continue
             possible_mate = pixel.get_mate()
             if possible_mate and possible_mate in cur_population:
@@ -296,14 +296,14 @@ class Reproduction:
                 best_option_pixel_value = 0
 
                 for pair_id, pair_pixel in cur_population.items():
-                    if pair_id == id or pair_id in couples_ids or type(pair_pixel) not in options_types:
+                    if pair_id == id or pair_id in couples_ids or type(pair_pixel).__name__ not in options_types:
                         continue
                     square_distance = Pixel.squares_distance(pixel, pair_pixel)
                     if square_distance > Pixel.threshold_to_reproduce and square_distance > best_option_pixel_value:
                         best_option_pixel_id = pair_id
                 if best_option_pixel_id:
                     couples_ids.extend([id, best_option_pixel_id])
-                    couples_ids.append((pixel, cur_population[best_option_pixel_id]))
+                    couples.append((pixel, cur_population[best_option_pixel_id]))
         p = Pool()
         offspring_pixels = p.map(Pixel.reproduce_couple, couples)
         self.population.population_expand(offspring_pixels)
