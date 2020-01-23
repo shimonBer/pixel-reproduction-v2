@@ -9,8 +9,10 @@ import colorsys
 
 MIN_PIXEL_RANGE = 0
 MAX_PIXEL_RANGE = 255
-LIFESPAN = 8
+LIFESPAN = 7
 DEFAULT_THRESHOLD = 4
+MIN_GENERATION_FOR_REPRODUCTION = 2
+MAX_GENERATION_FOR_REPRODUCTION = 5
 
 
 class Pixel(ABC):
@@ -252,14 +254,13 @@ class Population:
 
     def population_dilution(self):
         for index, pixel in self.community.items():
-            if pixel.get_reproduction_amount() >= LIFESPAN:
-               self.community.pop(index)
+            if pixel.get_generation() >= LIFESPAN:
+                self.community.pop(index)
 
     def population_expand(self, offsprings):
         for offspring in offsprings:
             self.community[Population.available_id] = offspring
             Population.increment_id()
-
 
 
 class Reproduction:
@@ -284,7 +285,7 @@ class Reproduction:
         couples_ids = []
         cur_population = self.population.get_community()
         for id, pixel in cur_population.items():
-            if id in couples_ids or pixel.get_generation():
+            if id in couples_ids or pixel.get_generation() < MIN_GENERATION_FOR_REPRODUCTION :
                 continue
             possible_mate = pixel.get_mate()
             if possible_mate and possible_mate in cur_population:
