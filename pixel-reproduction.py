@@ -411,7 +411,7 @@ if __name__ == '__main__':
                                                 'Forth value is in the case of CMYK pixel.')
 
     parser.add_argument("dominance_schemes", help="Which type of pixel is dominance in its reproducing process."
-                                                  "Must be a list of pixel types (RGB, HSL, HSV, CYMK), comma"
+                                                  "Must be a list of pixel types (RGB, HSL, HSV, CMYK), comma"
                                                   "separated. if you wish to specify an empty list if pixels, "
                                                   "please put the word 'none' ")
 
