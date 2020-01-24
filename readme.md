@@ -17,7 +17,7 @@ This information needs to be included in the arguments of the program.
 #### Getting Started
 In order to run the program run the following command (replace each argument with the proper integer) inside the project folder:
 
-> python3 ./pixel_reproduction.py population_file, dominance_schemes, initial_pixels_amount, reproduction_interval, number_of_iterations
+> python3 ./pixel_reproduction.py population_file dominance_schemes initial_pixels_amount reproduction_interval number_of_iterations
 
 All arguments are mandatory. 
 Their values are explained below or via --help command.
@@ -36,10 +36,10 @@ population_file: A name of a file, which includes a population description: Each
                                                 Type of Pixel,value1,value2,value3,value4.
                                                 Forth value is in the case of CMYK pixel.
 
-dominance_schemes :Which type of pixel is dominance in its reproducing process."
-                                                  "Must be a list of pixel types (RGB, HSL, HSV, CYMK), comma"
-                                                  "separated. if you wish to specify an empty list if pixels, "
-                                                  "please put the word 'none' 
+dominance_schemes :Which type of pixel is dominance in its reproducing process.
+                                                  Must be a list of pixel types (RGB, HSL, HSV, CYMK), comma
+                                                  separated. if you wish to specify an empty list if pixels, 
+                                                  please put the word 'none' 
 
 reproduction_interval: How much time (seconds) between one reproduction to another
 
