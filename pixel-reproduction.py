@@ -10,7 +10,7 @@ from enum import Enum
 MIN_PIXEL_RANGE = 0
 MAX_PIXEL_RANGE = 255
 LIFESPAN = 8
-DEFAULT_THRESHOLD = 0
+DEFAULT_THRESHOLD = 10
 MIN_GENERATION_FOR_REPRODUCTION = 3
 MAX_GENERATION_FOR_REPRODUCTION = 6
 MIN_NUMBER_OF_PIXELS_FOR_REPRODUCTION = 2
@@ -24,10 +24,10 @@ class ColorSchemes(Enum):
     HSV = 'HSV'
     CMYK = 'CMYK'
 
+
 class Pixel(ABC):
 
     threshold_to_reproduce = DEFAULT_THRESHOLD
-    global dominance_set
 
     def __init__(self):
         self.generation = 0
@@ -55,6 +55,9 @@ class Pixel(ABC):
     def get_mate(self):
         return self.mate
 
+    def set_mate(self, id):
+        self.mate = id
+
     @staticmethod
     def squares_distance(first, second):
         asRGB_first = first.asRGB()
@@ -71,23 +74,24 @@ class Pixel(ABC):
                (first_values[2] + second_values[2]) // 2
 
     @staticmethod
-    def reproduce_couple(couple):
-        first_type = type(couple[0]).__name__
-        second_type = type(couple[1]).__name__
+    def reproduce_couple(input):
+        first_type = type(input[0]).__name__
+        second_type = type(input[1]).__name__
+        dominance_set = input[2]
         global child_type
-        if first_type in Pixel.dominance_set:
-            if second_type in Pixel.dominance_set:
+        if first_type in dominance_set:
+            if second_type in dominance_set:
                 rnd_choice = random.randint(0, 1)
                 child_type = first_type if rnd_choice == 0 else second_type
             else:
                 child_type = first_type
         else:
-            if second_type in Pixel.dominance_set:
+            if second_type in dominance_set:
                 child_type = second_type
             else:
                 rnd_choice = random.randint(0, 1)
                 child_type = first_type if rnd_choice == 0 else second_type
-        r, g, b = Pixel.rgb_average(couple[0], couple[1])
+        r, g, b = Pixel.rgb_average(input[0], input[1])
 
         if child_type == ColorSchemes.RGB.value:
             return RGB((r, g, b))
@@ -294,8 +298,9 @@ class Population:
 
 
 class Reproduction:
-    def __init__(self, population, interval, iterations):
+    def __init__(self, population, dominance_set, interval, iterations):
         self.population = population
+        self.dominance_set = dominance_set
         self.stage = 0
         self.reproduction_interval = interval
         self.number_of_iterations = iterations
@@ -319,14 +324,15 @@ class Reproduction:
             pixel_gen = pixel.get_generation()
             if MIN_GENERATION_FOR_REPRODUCTION <= pixel_gen <= MAX_GENERATION_FOR_REPRODUCTION:
                 pixels_indexes_capable_of_reproducing.append(id)
-
         for id in pixels_indexes_capable_of_reproducing:
             if id in couples_ids:
                 continue
             possible_mate = cur_population[id].get_mate()
             if possible_mate and possible_mate in cur_population:
-                couples.append((cur_population[id], cur_population[possible_mate]))
+                couples.append((cur_population[id], cur_population[possible_mate], self.dominance_set))
                 couples_ids.extend([id, possible_mate])
+                cur_population[id].set_mate(possible_mate)
+                cur_population[possible_mate].set_mate(id)
             else:
                 options_types = cur_population[id].get_options()
                 best_option_pixel_id = None
@@ -341,7 +347,9 @@ class Reproduction:
                         best_option_pixel_id = pair_id
                 if best_option_pixel_id:
                     couples_ids.extend([id, best_option_pixel_id])
-                    couples.append((cur_population[id], cur_population[best_option_pixel_id]))
+                    couples.append((cur_population[id], cur_population[best_option_pixel_id], self.dominance_set))
+                    cur_population[id].set_mate(best_option_pixel_id)
+                    cur_population[best_option_pixel_id].set_mate(id)
         p = Pool()
         offspring_pixels = p.map(Pixel.reproduce_couple, couples)
         self.population.population_expand(offspring_pixels)
@@ -387,7 +395,6 @@ def verify_inputs(pixels, dominance_schemes):
             if scheme not in correct_pixels_type:
                 print("Bad value: {0} on dominance schemes list".format(scheme))
                 exit(EXIT_ERROR)
-    Pixel.set_dominance(dominance_schemes)
     for pixel in pixels:
         if pixel[0] not in correct_pixels_type:
             print("Bad value: {0} on pixels list".format(pixel))
@@ -399,7 +406,7 @@ def main(arguments):
     dominance_schemes = arguments.dominance_schemes.split(',')
     verify_inputs(pixels, dominance_schemes)
     population = Population(pixels)
-    Reproduction(population, arguments.reproduction_interval, arguments.number_of_iterations).reproduce()
+    Reproduction(population, dominance_schemes, arguments.reproduction_interval, arguments.number_of_iterations).reproduce()
 
 
 if __name__ == '__main__':
