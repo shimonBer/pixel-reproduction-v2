@@ -32,9 +32,13 @@ Run the following command:
 
 #### ARGUMENTS
 population_file: A name of a file, which includes a population description: Each line
-                                                of the file includes a comma separated information- 
-                                                Type of Pixel,value1,value2,value3,value4.
-                                                Forth value is in the case of CMYK pixel.
+                 of the file includes a comma separated information- 
+                 Type of Pixel,value1,value2,value3,value4.
+                 Forth value is in the case of CMYK pixel.
+                 RGB values are between 0-255
+                 CMYK values are percentages- [0-100]
+                 HSV-HSL values are [0-1]
+                                     
 
 dominance_schemes :Which type of pixel is dominance in its reproducing process.
                                                   Must be a list of pixel types (RGB, HSL, HSV, CMYK), comma
